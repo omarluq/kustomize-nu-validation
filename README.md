@@ -15,7 +15,7 @@ jobs:
   validate-kustomize:
     runs-on: ubuntu-latest
     steps:
-      - uses: omarluq/kustomize-nu-validation@v1
+      - uses: omarluq/kustomize-nu-validation@alpha
 ```
 
 ## Optional Inputs
