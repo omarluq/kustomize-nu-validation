@@ -1,5 +1,8 @@
 name: Kustomize nu validation
 author: omar.luqman@hey.com
+branding:
+  icon: 'check-square'
+  color: 'green'
 description: "Validate kustomize Kubernetes manifests with Kubeconform"
 inputs:
   entry:
