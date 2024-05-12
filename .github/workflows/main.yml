@@ -1,0 +1,14 @@
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: self test action
+        uses: ./
+        with:
+          entry: "./example"

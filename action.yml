@@ -1,0 +1,74 @@
+name: Kustomize nu validation
+author: omar.luqman@hey.com
+description: "Validate kustomize Kubernetes manifests with Kubeconform"
+inputs:
+  entry:
+    description: 'Comma-separated list of Kustomize directories to validate (defaults to all in "./kustomize")'
+    required: false
+    default: "./kustomize"
+  kubectl_version:
+    description: 'Version of kubectl to use (default: "1.30.0")'
+    required: false
+    default: "1.30.0"
+  kubeconform_version:
+    description: 'Version of kubeconform to use (default: "0.6.6")'
+    required: false
+    default: "0.6.6"
+  kustomize_version:
+    description: 'Version of kustomize to use (default: "5.4.1")'
+    required: false
+    default: "5.4.1"
+  nushell_version:
+    description: 'Version of Nushell to use (default: "0.93.0")'
+    required: false
+    default: "0.93.0"
+  python_version:
+    description: 'Version of Python to use (default: "3.12")'
+    required: false
+    default: "3.12"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python_version }}
+    - name: Install pyyaml
+      shell: bash
+      run: pip install pyyaml
+    - uses: yokawasa/action-setup-kube-tools@v0.9.2
+      with:
+        setup-tools: |
+          kubectl
+          kubeconform
+          kustomize
+        kubectl: ${{ inputs.kubectl_version }}
+        kubeconform: ${{ inputs.kubeconform_version }}
+        kustomize: ${{ inputs.kustomize_version }}
+    - name: Download and Extract CRD Extractor
+      shell: bash
+      run: |
+        wget -O crd-extractor.zip https://github.com/datreeio/CRDs-catalog/releases/download/v0.0.12/crd-extractor.zip &&
+        unzip crd-extractor.zip &&
+        chmod +x crd-extractor.sh &&
+        rm crd-extractor.zip
+    - name: Extract CRDs (if necessary)
+      shell: bash
+      id: extract-crds
+      run: ./crd-extractor.sh
+    - name: Install Dependencies
+      shell: bash
+      if: ${{ env.ACT }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bsdmainutils
+    - name: Set up Nushell
+      uses: hustcer/setup-nu@v3.10
+      with:
+        version: ${{ inputs.nushell_version }}
+    - name: Validate Kustomize Files
+      shell: nu {0}
+      run: use ${{ github.workspace }}/validation.nu *; execute ${{ inputs.entry }}
